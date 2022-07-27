@@ -1,2 +1,2 @@
-# Internet
-⚡ complete work ecosystem balancer
+# Talkstation
+⚡ Real time voice chat rooms
