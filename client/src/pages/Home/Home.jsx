@@ -26,13 +26,10 @@ const Home = () => {
           nothing breaks
         </p>
         <div>
-          <Button onClick={startRegister} lable="Get your username"></Button>
+          <Button onClick={startRegister} lable="Let's go"></Button>
         </div>
         <div className={styles.signinWrapper}>
           <span className={styles.hasInvite}>Have an invite text? </span>
-          <Link style={signInStyle} to="/login">
-            Sign In
-          </Link>
         </div>
       </Card>
     </div>

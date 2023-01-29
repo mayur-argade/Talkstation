@@ -1,0 +1,59 @@
+.cardWrapper{
+display: flex;
+align-items: center;
+justify-content: center;
+margin-top: 6rem;
+}
+
+.buttonWrapper{
+    margin-bottom: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+.logoButton{
+    width: 40px;
+    height: 40px;
+    background-color: #f3f4f6;
+    border: none;
+    outline: none;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.active{
+    width: 40px;
+    height: 40px;
+    background-color: #f3f4f6;
+    border: none;
+    outline: none;
+    border-radius: 10px;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #1d4ed8;
+}
+
+.logoButton:last-child {
+    margin-left: 10px;
+}
+
+.active:last-child {
+    margin-left: 10px;
+}
+
+
+.actionButtonWrap{
+    margin-top: 30px;
+}
+
+.bottomPara{
+    margin: 0 auto;
+    margin-top: 10px;
+width: 100;
+width: 80%;
+}
