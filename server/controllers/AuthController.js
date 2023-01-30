@@ -2,6 +2,7 @@ const otpService = require("../services/otp-service");
 const hashService = require("../services/hash-service");
 const userService = require("../services/user-service");
 const tokenService = require("../services/token-service");
+const UserDTO = require("../dto/userDTO");
 
 exports.sendotp = async (req, res) => {
   // get phone number
@@ -12,7 +13,8 @@ exports.sendotp = async (req, res) => {
   }
 
   // generate random number using crypto module
-  const otp = otpService.generateOtp();
+  // const otp = otpService.generateOtp();
+  const otp = 1234;
 
   //   generating hash for otp
   const ttl = 1000 * 60 * 2;
@@ -22,26 +24,26 @@ exports.sendotp = async (req, res) => {
 
   //   send otp
   try {
-    await otpService.sendOtp(phone, otp);
+    // await otpService.sendOtp(phone, otp);
     return res.json({
       hash: `${hash}.${expires}`,
       phone,
     });
   } catch (err) {
     console.log(err);
-    res.status(400).json(err);
+    return res.status(400).json(err);
   }
 };
 
 exports.verifyotp = async (req, res) => {
   const { otp, hash, phone } = req.body;
   if (!otp || !hash || !phone) {
-    res.status(400).json("all fields are required");
+    return res.status(400).json("all fields are required");
   }
 
   const [hashedOtp, expires] = hash.split(".");
   if (Date.now() > +expires) {
-    res.status(400).json("otp expired");
+    return res.status(400).json("otp expired");
   }
 
   const data = `${phone}.${otp}.${expires}`;
@@ -49,7 +51,7 @@ exports.verifyotp = async (req, res) => {
   const isValid = otpService.verifyOtp(hashedOtp, data);
 
   if (!isValid) {
-    res.status(400).json("invalid otp");
+    return res.status(400).json("invalid otp");
   }
 
   let user;
@@ -61,7 +63,7 @@ exports.verifyotp = async (req, res) => {
     }
   } catch (err) {
     console.log(err);
-    res.status(400).json(err);
+    return res.status(400).json(err);
   }
 
   const { accessToken, refreshToken } = tokenService.generateTokens({
@@ -69,10 +71,23 @@ exports.verifyotp = async (req, res) => {
     activated: false,
   });
 
-  res.cookie("refreshtoken", refreshToken, {
-    maxAge: 1000 * 60 * 60 * 24 * 30,
-    httpOnly: true,
-  });
+  const userdto = new UserDTO(user);
 
-  res.json({ accessToken });
+  await tokenService.storeRefreshToken(refreshToken, userdto._id);
+
+  res
+    .status(200)
+    .cookie("refreshtoken", refreshToken, {
+      maxAge: 1000 * 60 * 60 * 24 * 30,
+      httpOnly: true,
+    })
+    .cookie("accessToken", accessToken, {
+      maxAge: 1000 * 60 * 60 * 24 * 30,
+      httpOnly: true,
+    })
+    .json({ userdto });
+};
+
+exports.activate = async (req, res) => {
+  res.json("response ok")
 };
