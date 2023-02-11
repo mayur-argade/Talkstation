@@ -2,6 +2,7 @@ const express = require("express");
 const app = express();
 var morgan = require("morgan");
 const cors = require("cors");
+const cookieParser = require('cookie-parser')
 
 // morgan middleware
 app.use(morgan("tiny"));
@@ -12,8 +13,9 @@ const corsOption = {
   origin: ["http://localhost:3000"],
 };
 app.use(cors(corsOption));
-app.use(express.json());
+app.use(express.json({limit: '8mb'}));
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser())
 
 // import all the routes here
 const home = require("./routes/HomeRoute");

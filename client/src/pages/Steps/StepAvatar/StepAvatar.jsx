@@ -5,7 +5,9 @@ import styles from "./StepAvatar.module.css";
 import { useState } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { setAvatar } from "../../../store/activateSlice";
+import { setAuth } from "../../../store/authSlice";
 import { activate } from "../../../http";
+import { useNavigate } from "react-router-dom";
 
 const StepAvatar = ({}) => {
   const [image, setImage] = useState("/asset/zoro.jpg");
@@ -13,13 +15,14 @@ const StepAvatar = ({}) => {
   const { name, avatar } = useSelector((state) => state.activate);
 
   const dispatch = useDispatch();
-
+  const navigate = useNavigate();
   function captureImage(e) {
     const file = e.target.files[0];
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onloadend = function () {
       setImage(reader.result);
+      console.log(reader.result);
       dispatch(setAvatar(reader.result));
     };
   }
@@ -27,6 +30,10 @@ const StepAvatar = ({}) => {
   async function submit() {
     try {
       const { data } = await activate({ name, avatar });
+      if (data.auth) {
+        dispatch(setAuth(data));
+        navigate("/rooms");
+      }
       console.log(data);
     } catch (error) {
       console.log(error);
@@ -51,7 +58,7 @@ const StepAvatar = ({}) => {
           />
         </div>
         <div className={styles.actionButtonWrap}>
-          <Button lable="Next"></Button>
+          <Button lable="Next" onClick={submit}></Button>
         </div>
       </Card>
     </div>

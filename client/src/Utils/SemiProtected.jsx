@@ -15,8 +15,8 @@ const SemiProtected = (props) => {
     function checkLogin(){
         if (isAuth !== true){ 
             navigate("/")
-        }if(isAuth===true && user.activated!==true){
-            navigate("/activate")
+        }if(isAuth===true && user.activated==true){
+            navigate("/rooms")
         }
         
     }

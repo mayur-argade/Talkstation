@@ -12,6 +12,12 @@ const userSchema = new mongoose.Schema(
       default: false,
       require: true,
     },
+    name: {
+      type: String,
+    },
+    photo: {
+      type: String,
+    },
   },
   {
     timestamps: true,
