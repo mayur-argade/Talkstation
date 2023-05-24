@@ -9,7 +9,7 @@ exports.isLoggedin = async (req, res, next) => {
 
     const userData = await tokenService.verifyAccessToken(accessToken);
 
-    // console.log(userData)
+    console.log("userdata",userData)
     next();
   } catch (error) {
     return res.status(401).json({ message: "invalid token"})

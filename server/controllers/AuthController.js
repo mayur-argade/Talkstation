@@ -45,6 +45,7 @@ exports.sendotp = async (req, res) => {
 
 exports.verifyotp = async (req, res) => {
   const { otp, hash, phone } = req.body;
+
   if (!otp || !hash || !phone) {
     return res.status(400).json("all fields are required");
   }
@@ -75,13 +76,11 @@ exports.verifyotp = async (req, res) => {
   }
 
   const { accessToken, refreshToken } = tokenService.generateTokens({
-    id: user._id,
+    _id: user._id,
     activated: false,
   });
 
-  const userdto = new UserDTO(user);
-
-  await tokenService.storeRefreshToken(refreshToken, userdto._id);
+  await tokenService.storeRefreshToken(refreshToken, user._id);
 
   res
     .status(200)
@@ -93,7 +92,7 @@ exports.verifyotp = async (req, res) => {
       maxAge: 1000 * 60 * 60 * 24 * 30,
       httpOnly: true,
     })
-    .json({ user: userdto });
+    .json({ user: user });
 };
 
 exports.activate = async (req, res) => {
@@ -108,7 +107,7 @@ exports.activate = async (req, res) => {
     }
 
     const user = await tokenService.verifyAccessToken(accessToken);
-    console.log("userfromaceesstoken", user);
+    // console.log("userfromaceesstoken", user);
     try {
       const photourl = await cloudinary.uploader.upload(avatar, {
         folder: "talkstaion/users",
@@ -124,11 +123,11 @@ exports.activate = async (req, res) => {
     user.activated = true;
 
     const updatedUser = await User.findByIdAndUpdate(
-      user.id,
+      user._id,
       { name, photo: user.photo, activated: true },
       { new: true }
     );
-    console.log("updatedUser", updatedUser);
+    // console.log("updatedUser", updatedUser);
     if (!updatedUser) {
       return res.status(404).json({ msg: "User not found." });
     }
@@ -141,57 +140,54 @@ exports.activate = async (req, res) => {
 };
 
 exports.refresh = async (req, res) => {
-  // get refresh token from header
+  // get refresh token
   const { refreshtoken: refreshTokenFromCookie } = req.cookies;
 
-  // check if refresh token is valid or not
-  let userData;
+  // console.log(refreshTokenFromCookie)
+
+  // check if token is valid or not
+  let userdata;
   try {
-    userData = await tokenService.verifyRefreshToken(refreshTokenFromCookie);
-    console.log("userdata",userData);
-    // check passed
+    userdata = await tokenService.verifyRefreshToken(refreshTokenFromCookie);
+    // console.log(userdata)
   } catch (err) {
-    console.log(err);
-    return res.status(401).json({ msg: "invalid token" });
+    return res.status(401).json({ message: "invalid token" });
   }
 
-  // check if user is in database or not
+  // check if token is in database or not
   try {
     const token = await tokenService.findRefreshToken(
-      userData.id,
+      userdata._id,
       refreshTokenFromCookie
     );
-
-    console.log("token-", token);
-
+    // console.log(token)
     if (!token) {
-      return res.status(401).json({ msg: "token not found" });
+      return res.status(401).json({ message: "invalid token" });
     }
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json({ msg: "internal error" });
+  } catch (err) {
+    return res.status(500).json({ message: "internal error" });
   }
-  // check if valid user
-  const user = await userService.findUser({ _id: userData.id });
+
+  // check if user is valid
+  const user = await userService.findUser({ _id: userdata._id });
+  console.log(user);
   if (!user) {
-    return res.status(401).json({ msg: "user is not found" });
+    return res.status(401).json({ message: "invalid user" });
   }
-  // create new tokens
-  const { refreshToken, accessToken } = await tokenService.generateTokens({
-    _id: userData.id,
+
+  // generate new token
+  const { refreshToken, accessToken } = tokenService.generateTokens({
+    _id: userdata._id,
   });
 
-  // update refresh token
+  // update refreshtoken
   try {
-    await tokenService.updateRefreshToken(userData.id, refreshToken);
-  } catch (error) {
-    console.log(error);
-    return res.status(500).json("internal server error");
+    await tokenService.updateRefreshToken(userdata._id, refreshToken);
+  } catch (err) {
+    return res.status(500).json({ message: "internal error" });
   }
 
-  // add them in cookies
-  const userdto = new UserDTO(user);
-
+  // put in cookie
   res
     .status(200)
     .cookie("refreshtoken", refreshToken, {
@@ -202,5 +198,17 @@ exports.refresh = async (req, res) => {
       maxAge: 1000 * 60 * 60 * 24 * 30,
       httpOnly: true,
     })
-    .json({ user: userdto, auth: true });
+    .json({ user: user });
+};
+
+exports.logout = async (req, res) => {
+  // delete refresh token from db
+  const { refreshtoken } = req.cookies;
+  await tokenService.removeToken(refreshtoken);
+  // clear cookie
+  res
+    .clearCookie("refreshtoken")
+    .clearCookie("accessToken")
+    .status(200)
+    .json({ user: null, auth: false });
 };

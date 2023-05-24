@@ -8,6 +8,7 @@ import { setAvatar } from "../../../store/activateSlice";
 import { setAuth } from "../../../store/authSlice";
 import { activate } from "../../../http";
 import { useNavigate } from "react-router-dom";
+import Loader from "../../../components/shared/Loader/Loader";
 
 const StepAvatar = ({}) => {
   const [image, setImage] = useState("/asset/zoro.jpg");
@@ -26,20 +27,25 @@ const StepAvatar = ({}) => {
       dispatch(setAvatar(reader.result));
     };
   }
-
+const [loading, setLoading] = useState(false)
   async function submit() {
+    setLoading(true)
     try {
       const { data } = await activate({ name, avatar });
       if (data.auth) {
         dispatch(setAuth(data));
         navigate("/rooms");
       }
-      console.log(data);
+      // setLoading(true)
     } catch (error) {
+      // setLoading(true)
       console.log(error);
     }
+    finally{
+      setLoading(false)
+    }
   }
-
+if(loading) return <Loader message={"please wait"}/>
   return (
     <div className={styles.cardWrapper}>
       <Card title={`okay ${name}!`} icon="face">
